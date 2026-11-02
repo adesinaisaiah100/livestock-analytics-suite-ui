@@ -1,0 +1,750 @@
+<!DOCTYPE html>
+<html lang="en" data-theme="carto-light">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Livestock Spatial & Epidemiological Analytics Suite — Design Inspiration Workbench</title>
+  <!-- Google Fonts: Inter & JetBrains Mono -->
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&family=JetBrains+Mono:wght@400;500;600;700&display=swap" rel="stylesheet">
+  <!-- Leaflet CSS for Spatial H3 Map -->
+  <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" />
+  <link rel="stylesheet" href="styles.css" />
+</head>
+<body>
+
+  <!-- ====================================================================
+       TOP EXECUTIVE COMMAND BAR (CARTO BUILDER + CONSOLE HYBRID)
+       ==================================================================== -->
+  <header class="top-command-bar">
+    <div class="brand-cluster">
+      <div class="brand-mark">H3</div>
+      <span class="brand-title">LIVESTOCK TELEMETRY STUDIO</span>
+      <span class="brand-divider">/</span>
+      <span class="brand-subtitle">EPIDEMIOLOGY &amp; VET ROUTING SUITE</span>
+    </div>
+
+    <nav class="nav-tabs" aria-label="Dashboard Suite Pages">
+      <button class="nav-tab active" data-view="view-spatial">
+        <span class="nav-tab-num">01</span> Spatial H3 &amp; Heatmap
+      </button>
+      <button class="nav-tab" data-view="view-executive">
+        <span class="nav-tab-num">02</span> Executive Analytics Suite
+      </button>
+      <button class="nav-tab" data-view="view-matrix">
+        <span class="nav-tab-num">03</span> Symptom-Disease Matrix
+      </button>
+      <button class="nav-tab" data-view="view-routing">
+        <span class="nav-tab-num">04</span> Vet &amp; Store Dispatch
+      </button>
+      <button class="nav-tab" data-view="view-layouts">
+        <span class="nav-tab-num">05</span> Layout Architecture Lab
+      </button>
+    </nav>
+
+    <div class="header-controls">
+      <select id="themeSwitcher" class="theme-select" title="Switch Visual Theme">
+        <option value="carto-light">Theme: CARTO Clean Light</option>
+        <option value="obsidian-dark">Theme: Obsidian Dark Command</option>
+        <option value="paper-editorial">Theme: Warm Paper Technical</option>
+      </select>
+      <button id="btnExportSnapshot" class="btn-export">EXPORT GEOJSON / CSV</button>
+    </div>
+  </header>
+
+  <!-- ====================================================================
+       GLOBAL MULTI-DIMENSIONAL FILTER RIBBON
+       ==================================================================== -->
+  <section class="filter-ribbon" aria-label="Global Epidemiological Filters">
+    <div class="filter-group">
+      <div class="filter-item">
+        <span class="filter-label">Corridor / State</span>
+        <select id="filterRegion" class="filter-select">
+          <option value="ALL">All Corridors (National)</option>
+          <option value="CLUSTER-JOS">Plateau (Jos Grazing &amp; Poultry)</option>
+          <option value="CLUSTER-OYO">Oyo (Ibadan-Oyo Corridor)</option>
+          <option value="CLUSTER-KANO">Kano (Pastoral Belt)</option>
+          <option value="CLUSTER-BENUE">Benue (River Valley Basin)</option>
+          <option value="CLUSTER-KADUNA">Kaduna (Zaria Basin)</option>
+        </select>
+      </div>
+
+      <div class="filter-item">
+        <span class="filter-label">Animal Type</span>
+        <select id="filterSpecies" class="filter-select">
+          <option value="ALL">All Livestock Species</option>
+          <option value="cattle">Cattle (Bovine)</option>
+          <option value="poultry">Poultry (Broilers / Layers)</option>
+          <option value="goats">Goats (Caprine)</option>
+          <option value="sheep">Sheep (Ovine)</option>
+          <option value="swine">Swine (Porcine)</option>
+        </select>
+      </div>
+
+      <div class="filter-item">
+        <span class="filter-label">Symptom Cluster</span>
+        <select id="filterSymptom" class="filter-select">
+          <option value="ALL">All Clinical Signs</option>
+          <option value="respiratory">Respiratory (Cough / Rales)</option>
+          <option value="hemorrhagic">Hemorrhagic (Lesions / Bleeding)</option>
+          <option value="digestive">Digestive (Diarrhea / Blisters)</option>
+          <option value="neurological">Neurological (Twisted Neck)</option>
+          <option value="mortality">Peracute Sudden Mortality</option>
+        </select>
+      </div>
+
+      <div class="filter-item">
+        <span class="filter-label">Suspected Disease</span>
+        <select id="filterDisease" class="filter-select">
+          <option value="ALL">All Suspected Pathogens</option>
+          <option value="Newcastle Disease">Newcastle Disease</option>
+          <option value="FMD (Foot & Mouth)">FMD (Foot &amp; Mouth)</option>
+          <option value="PPR (Goat Plague)">PPR (Goat Plague)</option>
+          <option value="African Swine Fever">African Swine Fever</option>
+          <option value="Coccidiosis">Coccidiosis</option>
+          <option value="Anthrax">Anthrax</option>
+        </select>
+      </div>
+
+      <div class="filter-item">
+        <span class="filter-label">Hex Metric Color</span>
+        <select id="filterMetric" class="filter-select">
+          <option value="recordedDeaths">Recorded Deaths (Mortality)</option>
+          <option value="reportsCount">Farmer Reports Count</option>
+          <option value="herdSize">Total Animals Affected</option>
+          <option value="routedToVet">Routed to Vet / Store</option>
+        </select>
+      </div>
+    </div>
+
+    <div class="filter-group">
+      <button id="btnResetFilters" class="btn-reset">RESET FILTERS</button>
+    </div>
+  </section>
+
+  <!-- ====================================================================
+       VIEW 01: CARTO BUILDER H3 SPATIAL WORKBENCH (IMAGE 1 INSPIRATION)
+       ==================================================================== -->
+  <main id="view-spatial" class="view-section active">
+    <div id="spatialWorkbenchContainer" class="spatial-workbench">
+
+      <!-- Map Canvas Stage -->
+      <div class="map-stage">
+        <div id="h3Map"></div>
+
+        <!-- Top-Left Search & Spatial Layer Switcher (CARTO Builder Style) -->
+        <div class="map-search-overlay">
+          <input type="text" id="mapQuickSearch" class="map-search-input" placeholder="Jump to State, LGA, or Disease..." />
+          <div class="map-mode-toolbar">
+            <button class="map-tool-btn active" data-maplayer="hex">H3 Hex Grid</button>
+            <button class="map-tool-btn" data-maplayer="heat">Thermal Heatmap</button>
+            <button class="map-tool-btn" data-maplayer="both">Hex + Vet Pins</button>
+          </div>
+          <div class="map-mode-toolbar">
+            <button class="map-tool-btn active" data-basemap="satellite">Satellite Hybrid</button>
+            <button class="map-tool-btn" data-basemap="dark">Dark Matter</button>
+            <button class="map-tool-btn" data-basemap="light">Positron Light</button>
+          </div>
+        </div>
+
+        <!-- Top-Right Active H3 Cell Inspector (Updates on Hex Click/Hover) -->
+        <div class="hex-inspector-card" id="hexInspector">
+          <div class="inspector-overline" id="inspIndex">H3 INDEX: 87581123EFFFFFF</div>
+          <div class="inspector-title" id="inspZone">Jos South / Barkin Ladi</div>
+          <div class="inspector-grid">
+            <div>
+              <div class="inspector-stat-label">Recorded Deaths</div>
+              <div class="inspector-stat-val" id="inspDeaths">412</div>
+            </div>
+            <div>
+              <div class="inspector-stat-label">Farmer Reports</div>
+              <div class="inspector-stat-val" id="inspReports">86</div>
+            </div>
+            <div>
+              <div class="inspector-stat-label">Primary Species</div>
+              <div class="inspector-stat-val" id="inspSpecies">CATTLE</div>
+            </div>
+            <div>
+              <div class="inspector-stat-label">Suspected Cause</div>
+              <div class="inspector-stat-val" id="inspDisease">FMD</div>
+            </div>
+          </div>
+        </div>
+
+        <!-- Bottom-Left CARTO Color Scale Legend -->
+        <div class="map-legend-box">
+          <div class="legend-kicker">SPATIAL H3 RESOLUTION 7 AGGREGATION</div>
+          <div class="legend-title" id="legendMetricLabel">Recorded Animal Deaths per Hex Cell</div>
+          <div class="legend-gradient-bar"></div>
+          <div class="legend-scale-labels">
+            <span>Low (Teal)</span>
+            <span>Moderate (Violet)</span>
+            <span>Critical Outbreak (Magenta)</span>
+          </div>
+        </div>
+      </div>
+
+      <!-- Right-Hand CARTO Builder Analytical Widget Dock (Exact Match to Image 1) -->
+      <aside class="carto-widget-dock">
+        <div class="dock-header">
+          <span class="dock-header-title">SPATIAL WIDGETS &amp; H3 TELEMETRY</span>
+          <span class="panel-tag" id="activeHexCounter">305 CELLS</span>
+        </div>
+
+        <!-- Widget 1: Top 5 Hotspots by Metric (Horizontal Emerald Bars like Image 1) -->
+        <div class="widget-block">
+          <div class="widget-kicker">RANKED H3 SPATIAL CLUSTERS</div>
+          <div class="widget-title">Top 5 Hex Zones by Recorded Mortality &amp; Cases</div>
+          <div class="carto-rank-list" id="widgetTopHexList">
+            <!-- Dynamically populated by app.js -->
+          </div>
+        </div>
+
+        <!-- Widget 2: Big Total Telemetry Counter (Matches "10,529" Card in Image 1) -->
+        <div class="widget-block">
+          <div class="widget-kicker">ACTIVE SURVEILLANCE METRIC</div>
+          <div class="widget-title" id="widgetBigCounterTitle">Total Recorded Animal Deaths</div>
+          <div class="widget-hero-number" id="widgetBigCounterVal">14,892</div>
+          <div class="widget-subnote" id="widgetBigCounterSub">Across 4,218 farmer reports | 78.4% routed to nearby vets</div>
+        </div>
+
+        <!-- Widget 3: Center-Labeled Multi-Ring Donut (Matches "61.45% LTE" Donut in Image 1) -->
+        <div class="widget-block">
+          <div class="widget-kicker">PROPORTIONAL BREAKDOWN</div>
+          <div class="widget-title">Reports by Dominant Suspected Disease</div>
+          <div class="donut-wrap">
+            <canvas id="cartoDockDonut"></canvas>
+            <div class="donut-center-label">
+              <span class="donut-center-pct" id="dockDonutPct">38.4%</span>
+              <span class="donut-center-sub" id="dockDonutLabel">NEWCASTLE</span>
+            </div>
+          </div>
+        </div>
+
+        <!-- Widget 4: Livestock Species Distribution Mini Bars -->
+        <div class="widget-block">
+          <div class="widget-kicker">HERD &amp; FLOCK COMPOSITION</div>
+          <div class="widget-title">Animals Inspected by Species Type</div>
+          <div class="carto-rank-list" id="widgetSpeciesBreakdown">
+            <!-- Dynamically populated -->
+          </div>
+        </div>
+      </aside>
+    </div>
+  </main>
+
+  <!-- ====================================================================
+       VIEW 02: EXECUTIVE TELEMETRY & PERFORMANCE SUITE (IMAGES 2 & 3 STYLE)
+       ==================================================================== -->
+  <section id="view-executive" class="view-section">
+    <div class="page-container">
+
+      <!-- Editorial Header Banner (Matches Top of Images 2 & 3) -->
+      <div class="editorial-banner">
+        <div>
+          <div class="editorial-overline">EPIDEMIOLOGICAL SURVEILLANCE &amp; CLINICAL TRIAGE</div>
+          <h1 class="editorial-heading">Monitor Livestock Outbreak Velocity, Symptom Clusters &amp; Mortality Performance</h1>
+          <p class="editorial-desc">
+            Track field farmer reports, spatial mortality spikes, suspected disease trajectories, and veterinary referral conversions across all active livestock corridors in real time.
+          </p>
+        </div>
+        <div>
+          <span class="panel-tag">SYNC STATUS: LIVE FIELD TELEMETRY</span>
+        </div>
+      </div>
+
+      <!-- 4-Column Top KPI Strip (Anti-Collision Top-Kicker Architecture) -->
+      <div class="kpi-strip">
+        <div class="kpi-card">
+          <div class="kpi-kicker">
+            <span class="kicker-square" style="background: var(--accent-primary);"></span>
+            <span>FARMER INTAKE REPORTS</span>
+          </div>
+          <div class="kpi-value-row">
+            <span class="kpi-main-num" id="kpiTotalReports">10,529</span>
+            <span class="kpi-delta delta-up-good">+14.2% vs 30d</span>
+          </div>
+          <div class="widget-subnote">Verified GPS farm coordinates logged</div>
+        </div>
+
+        <div class="kpi-card">
+          <div class="kpi-kicker">
+            <span class="kicker-square" style="background: var(--accent-crimson);"></span>
+            <span>RECORDED ANIMAL DEATHS</span>
+          </div>
+          <div class="kpi-value-row">
+            <span class="kpi-main-num" id="kpiTotalDeaths">14,892</span>
+            <span class="kpi-delta delta-up-bad">4.8% Flock CFR</span>
+          </div>
+          <div class="widget-subnote">Cumulative mortality across filtered herds</div>
+        </div>
+
+        <div class="kpi-card">
+          <div class="kpi-kicker">
+            <span class="kicker-square" style="background: var(--accent-teal);"></span>
+            <span>ANIMALS UNDER SURVEILLANCE</span>
+          </div>
+          <div class="kpi-value-row">
+            <span class="kpi-main-num" id="kpiTotalHerd">312,450</span>
+            <span class="kpi-delta delta-up-good">5 Species Tracked</span>
+          </div>
+          <div class="widget-subnote">Combined flock &amp; pastoral herd headcount</div>
+        </div>
+
+        <div class="kpi-card">
+          <div class="kpi-kicker">
+            <span class="kicker-square" style="background: var(--accent-secondary);"></span>
+            <span>VET DOCTOR &amp; STORE ROUTING</span>
+          </div>
+          <div class="kpi-value-row">
+            <span class="kpi-main-num" id="kpiRoutedCases">8,244</span>
+            <span class="kpi-delta delta-up-good">78.3% Conversion</span>
+          </div>
+          <div class="widget-subnote">Dispatched to nearest verified vet clinic/store</div>
+        </div>
+      </div>
+
+      <!-- ROW 1 OF IMAGES 2 & 3: [Donut Gauge] + [Multi-Line Trajectory Chart] + [Horizontal Triage Funnel] -->
+      <div class="exec-row-top">
+        <!-- Left Panel: Key Features / Symptom Share Donut (Image 2 Top-Left) -->
+        <div class="chart-panel">
+          <div class="panel-header">
+            <div class="panel-title-group">
+              <span class="panel-kicker">CLINICAL INTAKE SHARE</span>
+              <h2 class="panel-title">Primary Symptom Distribution</h2>
+            </div>
+            <span class="panel-tag">RATIO</span>
+          </div>
+          <div class="donut-wrap" style="height: 220px;">
+            <canvas id="execSymptomDonut"></canvas>
+            <div class="donut-center-label">
+              <span class="donut-center-pct" id="execDonutCenterVal">34% / 66%</span>
+              <span class="donut-center-sub">CRIT / MODERATE</span>
+            </div>
+          </div>
+        </div>
+
+        <!-- Center Panel: Multi-Line Outbreak Trajectory (Image 2 & 3 Top-Center Line Chart) -->
+        <div class="chart-panel">
+          <div class="panel-header">
+            <div class="panel-title-group">
+              <span class="panel-kicker">TEMPORAL EPIDEMIOLOGY CURVE</span>
+              <h2 class="panel-title">Multi-Pathogen Outbreak Velocity &amp; Mortality Trend (12-Week Window)</h2>
+            </div>
+            <span class="panel-tag">WEEKLY INCIDENCE</span>
+          </div>
+          <div class="canvas-holder">
+            <canvas id="execMultiLineChart"></canvas>
+          </div>
+        </div>
+
+        <!-- Right Panel: Triage Routing Breakdown (Image 2 Top-Right Horizontal Block Chart) -->
+        <div class="chart-panel">
+          <div class="panel-header">
+            <div class="panel-title-group">
+              <span class="panel-kicker">DECISION ROUTING ENGINE</span>
+              <h2 class="panel-title">Case Resolution &amp; Escalation</h2>
+            </div>
+            <span class="panel-tag">4 TIERS</span>
+          </div>
+          <div class="canvas-holder">
+            <canvas id="execRoutingFunnelChart"></canvas>
+          </div>
+        </div>
+      </div>
+
+      <!-- ROW 2 OF IMAGES 2 & 3: [Dense Grouped Red/Blue/Amber Bar Chart] + [Secondary Histogram] -->
+      <div class="exec-row-mid">
+        <div class="chart-panel">
+          <div class="panel-header">
+            <div class="panel-title-group">
+              <span class="panel-kicker">REGIONAL LGA COMPARISON</span>
+              <h2 class="panel-title">Recorded Deaths vs. Active Reports vs. Vet Dispatches by Livestock Zone</h2>
+            </div>
+            <span class="panel-tag">GROUPED METRICS</span>
+          </div>
+          <div class="canvas-holder">
+            <canvas id="execGroupedBarChart"></canvas>
+          </div>
+        </div>
+
+        <div class="chart-panel">
+          <div class="panel-header">
+            <div class="panel-title-group">
+              <span class="panel-kicker">FLOCK / HERD SIZE BRACKETS</span>
+              <h2 class="panel-title">Mortality Rate (%) by Farm Herd Population Tier</h2>
+            </div>
+            <span class="panel-tag">COHORT DISTRIBUTION</span>
+          </div>
+          <div class="canvas-holder">
+            <canvas id="execHerdCohortChart"></canvas>
+          </div>
+        </div>
+      </div>
+
+      <!-- ROW 3 OF IMAGE 3: [Stacked Species Mortality] + [Green Recovery Bars] + [Store Fulfillment Donut] -->
+      <div class="exec-row-bottom">
+        <div class="chart-panel">
+          <div class="panel-header">
+            <div class="panel-title-group">
+              <span class="panel-kicker">SPECIES VULNERABILITY</span>
+              <h2 class="panel-title">Mortality vs. Survival by Animal Type</h2>
+            </div>
+            <span class="panel-tag">BY SPECIES</span>
+          </div>
+          <div class="canvas-holder-sm">
+            <canvas id="execSpeciesStackedChart"></canvas>
+          </div>
+        </div>
+
+        <div class="chart-panel">
+          <div class="panel-header">
+            <div class="panel-title-group">
+              <span class="panel-kicker">TREATMENT CONTAINMENT</span>
+              <h2 class="panel-title">7-Day Post-Referral Flock Recovery Rate</h2>
+            </div>
+            <span class="panel-tag">CONTAINMENT</span>
+          </div>
+          <div class="canvas-holder-sm">
+            <canvas id="execRecoveryBarChart"></canvas>
+          </div>
+        </div>
+
+        <div class="chart-panel">
+          <div class="panel-header">
+            <div class="panel-title-group">
+              <span class="panel-kicker">PHARMACY &amp; DOCTOR SLA</span>
+              <h2 class="panel-title">Referral Fulfillment Breakdown</h2>
+            </div>
+            <span class="panel-tag">SLA TARGET</span>
+          </div>
+          <div class="donut-wrap" style="height: 195px;">
+            <canvas id="execSlaDonutChart"></canvas>
+            <div class="donut-center-label">
+              <span class="donut-center-pct">91.4%</span>
+              <span class="donut-center-sub">FULFILLED &lt;2H</span>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- BOTTOM DIAGNOSTIC SUMMARY MATRIX (Matches the 4 Footer Columns in Image 3) -->
+      <div class="diagnostic-footer-grid">
+        <div class="diag-card">
+          <div class="diag-card-header">
+            <span class="kicker-square" style="background: var(--accent-crimson);"></span>
+            <span>Biosecurity &amp; Red-Flag Alerts</span>
+          </div>
+          <ul class="diag-list">
+            <li><span>Hemorrhagic Spikes (&gt;10% mortality)</span> <span class="mono-val">42 Farms</span></li>
+            <li><span>Unvaccinated Flock Clusters</span> <span class="mono-val">118 Hexes</span></li>
+            <li><span>Contaminated Borehole Water Source</span> <span class="mono-val">19 Reports</span></li>
+          </ul>
+        </div>
+
+        <div class="diag-card">
+          <div class="diag-card-header">
+            <span class="kicker-square" style="background: var(--accent-primary);"></span>
+            <span>Top Identified Pathogens</span>
+          </div>
+          <ul class="diag-list">
+            <li><span>Newcastle Disease (Avian)</span> <span class="mono-val">38.4%</span></li>
+            <li><span>FMD — Foot &amp; Mouth (Bovine)</span> <span class="mono-val">24.1%</span></li>
+            <li><span>PPR — Goat Plague (Caprine)</span> <span class="mono-val">19.8%</span></li>
+          </ul>
+        </div>
+
+        <div class="diag-card">
+          <div class="diag-card-header">
+            <span class="kicker-square" style="background: var(--accent-emerald);"></span>
+            <span>Veterinary Doctor Escalations</span>
+          </div>
+          <ul class="diag-list">
+            <li><span>Emergency Field Vet Dispatched</span> <span class="mono-val">614 Cases</span></li>
+            <li><span>Median Clinical Triage Latency</span> <span class="mono-val">16.4 Mins</span></li>
+            <li><span>Quarantine Advisory Issued</span> <span class="mono-val">289 Farms</span></li>
+          </ul>
+        </div>
+
+        <div class="diag-card">
+          <div class="diag-card-header">
+            <span class="kicker-square" style="background: var(--accent-amber);"></span>
+            <span>Agro-Vet Pharmacy Supply</span>
+          </div>
+          <ul class="diag-list">
+            <li><span>Thermostable NDV-I2 Vaccine Stock</span> <span class="mono-val">94% Stores</span></li>
+            <li><span>Electrolytes &amp; Coccidiostats</span> <span class="mono-val">98% Stores</span></li>
+            <li><span>Cold-Chain Integrity Alerts</span> <span class="mono-val">2 Depots</span></li>
+          </ul>
+        </div>
+      </div>
+
+    </div>
+  </section>
+
+  <!-- ====================================================================
+       VIEW 03: SYMPTOM-TO-DISEASE CORRELATION & EPIDEMIOLOGY MATRIX
+       ==================================================================== -->
+  <section id="view-matrix" class="view-section">
+    <div class="page-container">
+      <div class="editorial-banner">
+        <div>
+          <div class="editorial-overline">DIFFERENTIAL DIAGNOSIS &amp; SYMPTOM CORRELATION</div>
+          <h1 class="editorial-heading">Clinical Symptom-to-Pathogen Probability Matrix &amp; Lethality Scatter</h1>
+          <p class="editorial-desc">
+            Inspect how farmer-reported clinical signs map to probable livestock diseases, alongside Case Fatality Rate (CFR) vs. Herd Contagion Velocity across species.
+          </p>
+        </div>
+        <div>
+          <span class="panel-tag">BAYESIAN CLINICAL WEIGHTS</span>
+        </div>
+      </div>
+
+      <!-- Heatmap Table -->
+      <div class="chart-panel" style="margin-bottom: 18px;">
+        <div class="panel-header">
+          <div class="panel-title-group">
+            <span class="panel-kicker">SYMPTOM CO-OCCURRENCE HEAT TABLE</span>
+            <h2 class="panel-title">Observed Clinical Signs vs. Confirmed Disease Diagnosis Confidence (%)</h2>
+          </div>
+          <span class="panel-tag">6 SYMPTOM CLUSTERS x 6 PATHOGENS</span>
+        </div>
+        <div class="matrix-table-wrap">
+          <table class="corr-table" id="symptomMatrixTable">
+            <!-- Dynamically rendered by app.js -->
+          </table>
+        </div>
+      </div>
+
+      <!-- Bottom Dual Charts: Disease Lethality Bubble Chart + Age/Weight Vulnerability -->
+      <div class="exec-row-mid">
+        <div class="chart-panel">
+          <div class="panel-header">
+            <div class="panel-title-group">
+              <span class="panel-kicker">CONTAGION VS. FATALITY</span>
+              <h2 class="panel-title">Disease Spread Velocity (R0 Proxy) vs. Case Fatality Rate (%)</h2>
+            </div>
+            <span class="panel-tag">BUBBLE SIZE = HERD HEADCOUNT</span>
+          </div>
+          <div class="canvas-holder">
+            <canvas id="matrixBubbleChart"></canvas>
+          </div>
+        </div>
+
+        <div class="chart-panel">
+          <div class="panel-header">
+            <div class="panel-title-group">
+              <span class="panel-kicker">SEASONAL WEATHER CORRELATION</span>
+              <h2 class="panel-title">Harmattan Dust &amp; Rainy Season Humidity Impact on Symptoms</h2>
+            </div>
+            <span class="panel-tag">12-MONTH CLIMATIC INDEX</span>
+          </div>
+          <div class="canvas-holder">
+            <canvas id="matrixRadarChart"></canvas>
+          </div>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- ====================================================================
+       VIEW 04: VET DOCTOR & AGRO-STORE ROUTING DISPATCH NETWORK
+       ==================================================================== -->
+  <section id="view-routing" class="view-section">
+    <div class="page-container">
+      <div class="editorial-banner">
+        <div>
+          <div class="editorial-overline">LAST-MILE VETERINARY CARE &amp; SUPPLY CHAIN ROUTING</div>
+          <h1 class="editorial-heading">Veterinary Doctor Escalation &amp; Nearby Agro-Vet Store Referral Analytics</h1>
+          <p class="editorial-desc">
+            Monitor how incoming farmer reports are triaged and routed to licensed veterinary doctors or verified regional agro-vet pharmacies, tracking travel distance, response SLA, and stock availability.
+          </p>
+        </div>
+        <div>
+          <span class="panel-tag">5 REGIONAL HUBS ACTIVE</span>
+        </div>
+      </div>
+
+      <div class="routing-grid">
+        <div class="chart-panel">
+          <div class="panel-header">
+            <div class="panel-title-group">
+              <span class="panel-kicker">ROUTING EFFICIENCY</span>
+              <h2 class="panel-title">Farmer-to-Vet Distance vs. Treatment Turnaround Time (Mins)</h2>
+            </div>
+            <span class="panel-tag">BY CORRIDOR</span>
+          </div>
+          <div class="canvas-holder">
+            <canvas id="routingLatencyChart"></canvas>
+          </div>
+        </div>
+
+        <div class="chart-panel">
+          <div class="panel-header">
+            <div class="panel-title-group">
+              <span class="panel-kicker">TRIAGE CHANNEL SPLIT</span>
+              <h2 class="panel-title">Self-Care Biosecurity vs. Store Supply vs. Emergency Vet Doctor</h2>
+            </div>
+            <span class="panel-tag">ROUTING DOORS</span>
+          </div>
+          <div class="canvas-holder">
+            <canvas id="routingDoorSplitChart"></canvas>
+          </div>
+        </div>
+      </div>
+
+      <!-- Verified Vet Doctors & Stores Directory Table -->
+      <div class="chart-panel" style="margin-bottom: 18px;">
+        <div class="panel-header">
+          <div class="panel-title-group">
+            <span class="panel-kicker">ACTIVE FIELD NETWORK</span>
+            <h2 class="panel-title">Regional Veterinary Referral Clinics &amp; Agro-Vet Supply Depots</h2>
+          </div>
+          <span class="panel-tag">LIVE SLA TELEMETRY</span>
+        </div>
+        <div class="matrix-table-wrap">
+          <table class="data-table" id="vetNetworkTable">
+            <thead>
+              <tr>
+                <th>Facility ID</th>
+                <th>Clinic / Agro-Vet Store Name</th>
+                <th>Facility Category</th>
+                <th>State &amp; LGA</th>
+                <th>Cases Routed</th>
+                <th>Fulfillment Rate</th>
+                <th>Median Response</th>
+                <th>Supply Status</th>
+              </tr>
+            </thead>
+            <tbody>
+              <!-- Populated by app.js -->
+            </tbody>
+          </table>
+        </div>
+      </div>
+
+      <!-- Live Farmer Report Triage Log -->
+      <div class="chart-panel">
+        <div class="panel-header">
+          <div class="panel-title-group">
+            <span class="panel-kicker">RECENT FIELD DISPATCH STREAM</span>
+            <h2 class="panel-title">Live Farmer Symptom Reports &amp; Automated Vet Routing Log</h2>
+          </div>
+          <span class="panel-tag">FILTERED STREAM</span>
+        </div>
+        <div class="matrix-table-wrap">
+          <table class="data-table" id="liveFarmerReportTable">
+            <thead>
+              <tr>
+                <th>H3 Cell Index</th>
+                <th>Corridor / LGA</th>
+                <th>Livestock Species</th>
+                <th>Flock / Herd Size</th>
+                <th>Recorded Deaths</th>
+                <th>Reported Clinical Sign</th>
+                <th>Suspected Cause</th>
+                <th>Routing Action</th>
+              </tr>
+            </thead>
+            <tbody>
+              <!-- Populated by app.js -->
+            </tbody>
+          </table>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- ====================================================================
+       VIEW 05: LAYOUT ARCHITECTURE LAB (COMPARE POSSIBLE DASHBOARD LOOKS)
+       ==================================================================== -->
+  <section id="view-layouts" class="view-section">
+    <div class="page-container">
+      <div class="editorial-banner">
+        <div>
+          <div class="editorial-overline">UI ARCHITECTURE &amp; DESIGN SYSTEM PLAYBOOK</div>
+          <h1 class="editorial-heading">Explore &amp; Switch Dashboard Layout Topologies for Your Production Build</h1>
+          <p class="editorial-desc">
+            Click any layout preset below to immediately reconfigure the Spatial H3 Workbench or switch themes so you can compare different ways of structuring your company's livestock analytics suite.
+          </p>
+        </div>
+        <div>
+          <span class="panel-tag">INTERACTIVE PRESETS</span>
+        </div>
+      </div>
+
+      <div class="preset-cards-grid">
+        <!-- Preset 1 -->
+        <div class="preset-card active-preset" id="presetCardRightDock">
+          <div>
+            <div class="panel-kicker">LAYOUT TOPOLOGY A (DEFAULT — IMAGE 1)</div>
+            <h3 class="panel-title" style="margin: 4px 0 8px;">CARTO Builder Right-Dock Workbench</h3>
+            <p class="editorial-desc" style="margin-bottom: 12px;">
+              75% full-bleed H3 hexagonal map canvas on the left + 370px fixed analytical widget dock on the right with ranked progress bars, hero counters, and ring charts.
+            </p>
+            <div class="ascii-wireframe">+-----------------------------------+---------------+
+| [Search] [H3 Grid | Heatmap]      | TOP 5 HEXES   |
+|                                   | ======= 16.6k |
+|        H3 HEXAGONAL MAP           | ======= 14.2k |
+|      (Teal -> Violet -> Pink)     |---------------|
+|                                   | TOTAL DEATHS  |
+|                                   | 14,892        |
+| [Color Scale Legend]              | (  61.4%  )   |
++-----------------------------------+---------------+</div>
+          </div>
+          <button class="btn-export" onclick="applySpatialLayout('default')">PREVIEW RIGHT-DOCK LAYOUT</button>
+        </div>
+
+        <!-- Preset 2 -->
+        <div class="preset-card" id="presetCardBottomDock">
+          <div>
+            <div class="panel-kicker">LAYOUT TOPOLOGY B</div>
+            <h3 class="panel-title" style="margin: 4px 0 8px;">Full-Width Map + Bottom Horizontal Tray</h3>
+            <p class="editorial-desc" style="margin-bottom: 12px;">
+              100% ultra-wide map canvas on top for national corridor inspection + horizontal scrolling telemetry cards docked along the bottom edge.
+            </p>
+            <div class="ascii-wireframe">+---------------------------------------------------+
+| [Search] [H3 Hex | Heatmap]         [Hex Inspect] |
+|                                                   |
+|          100% ULTRA-WIDE H3 MAP CANVAS            |
+|                                                   |
++----------------+-----------------+----------------+
+| TOP 5 HOTSPOTS | TOTAL MORTALITY | DISEASE DONUT  |
++----------------+-----------------+----------------+</div>
+          </div>
+          <button class="btn-export" onclick="applySpatialLayout('layout-bottom-dock')">PREVIEW BOTTOM-TRAY LAYOUT</button>
+        </div>
+
+        <!-- Preset 3 -->
+        <div class="preset-card" id="presetCardExec">
+          <div>
+            <div class="panel-kicker">LAYOUT TOPOLOGY C (IMAGES 2 &amp; 3)</div>
+            <h3 class="panel-title" style="margin: 4px 0 8px;">Executive Multi-Chart Console Grid</h3>
+            <p class="editorial-desc" style="margin-bottom: 12px;">
+              High-density 3-tier editorial analytics grid combining center-labeled donuts, multi-series outbreak velocity lines, grouped red/blue/amber bar charts, and a 4-column diagnostic footer.
+            </p>
+            <div class="ascii-wireframe">+---------------------------------------------------+
+| [ KPI 1 ]   [ KPI 2 ]   [ KPI 3 ]   [ KPI 4 ]     |
++-------------+-----------------------+-------------+
+| ( 29%/200%) |  /\/\/\ MULTI-LINE    | === FUNNEL  |
++-------------+-----------------------+-------------+
+| ||||| GROUPED RED/BLUE BARS   | |||| COHORT BARS  |
++-------------------------------+-------------------+</div>
+          </div>
+          <button class="btn-export" onclick="switchView('view-executive')">OPEN EXECUTIVE CHART SUITE</button>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- External Libraries: Leaflet + Leaflet.heat + Chart.js 4 -->
+  <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
+  <script src="https://unpkg.com/leaflet.heat@0.2.0/dist/leaflet-heat.js"></script>
+  <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.1/dist/chart.umd.min.js"></script>
+  <!-- Mock Telemetry & Spatial H3 Data -->
+  <script src="data.js"></script>
+  <!-- Core Application Controller -->
+  <script src="app.js"></script>
+</body>
+</html>
